@@ -39,7 +39,16 @@
 </ol>
 <div class="note"><strong>"모든 사용자"</strong>(관리자 권한)로 설치하면 <code>C:\Program Files\Recordly</code>에 들어갑니다. 이 경우 설정 파일의 경로 두 곳을 <code>C:/Program Files/Recordly/Recordly.exe</code> 와 <code>C:/Program Files/Recordly/resources/mcp/recordly-mcp-server.mjs</code> 로 바꿔야 합니다.</div>
 
-<h2>2. MCP 등록 (명령어 없이 파일로)</h2>
+<h2>2. MCP 등록</h2>
+<h3>가장 쉬운 방법: Claude 데스크톱 앱에 확장 프로그램으로 설치</h3>
+<ol>
+  <li>같이 받은 <code>Recordly-MCP.mcpb</code> 파일을 <strong>더블클릭</strong>합니다. Claude 앱이 열리면서 "확장 프로그램 설치" 창이 뜨면 <strong>설치</strong>를 누릅니다.</li>
+  <li>더블클릭으로 안 열리면 Claude 앱 → <strong>설정</strong> → <strong>확장 프로그램(Extensions)</strong> → <strong>고급 설정</strong> → <strong>확장 프로그램 설치…</strong> 에서 그 파일을 고릅니다.</li>
+  <li>설정 항목 "Recordly executable"은 비워 둡니다. 기본 위치에 설치된 Recordly는 자동으로 찾습니다.</li>
+</ol>
+<p>Node.js 설치, JSON 편집, 명령어 입력이 전혀 필요 없습니다. Claude 앱이 내장 실행기로 서버를 돌립니다. 설치가 끝나면 새 채팅에서 바로 <code>recordly_*</code> 도구가 보입니다.</p>
+<div class="note">확장 프로그램은 Claude 앱의 <strong>채팅</strong>에서 쓰입니다. Claude 앱 안의 <strong>Code 탭</strong>(코딩 에이전트)이나 Cursor에서 쓰려면 아래 파일 복사 방법을 씁니다.</div>
+
 <h3>Claude 앱 (Code 탭)</h3>
 <ol>
   <li>같이 받은 <code>claude-code.mcp.json</code>을 <strong>작업 폴더</strong>(예: 바탕화면의 <code>AI캡처</code>)에 복사합니다.</li>

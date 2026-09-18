@@ -28,7 +28,9 @@ const require = createRequire(import.meta.url);
 function resolveServerVersion() {
 	// In the repo the script sits under scripts/mcp; in the packaged app it is
 	// copied to resources/mcp without a package.json next to it.
-	for (const candidate of ["../../package.json", "../app.asar/package.json"]) {
+	// Repo: scripts/mcp → ../../package.json. Extension bundle: server/ → ../package.json.
+	// Installed app: resources/mcp → ../app.asar/package.json.
+	for (const candidate of ["../../package.json", "../package.json", "../app.asar/package.json"]) {
 		try {
 			return require(candidate).version ?? "0.0.0";
 		} catch {

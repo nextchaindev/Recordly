@@ -66,8 +66,28 @@ describe("getDefaultRecordlyAppPath", () => {
 			}),
 		).toBe("C:/Recordly.exe");
 		expect(
-			getDefaultRecordlyAppPath({ env: {}, execPath: "C:/node.exe", versions: {} }),
+			getDefaultRecordlyAppPath({
+				env: {},
+				execPath: "C:/node.exe",
+				versions: {},
+				exists: () => false,
+			}),
 		).toBeUndefined();
+		const installed = path.join(
+			"C:\\Users\\me\\AppData\\Local",
+			"Programs",
+			"Recordly",
+			"Recordly.exe",
+		);
+		expect(
+			getDefaultRecordlyAppPath({
+				env: { LOCALAPPDATA: "C:\\Users\\me\\AppData\\Local" },
+				execPath: "C:/node.exe",
+				versions: {},
+				platform: "win32",
+				exists: (candidate) => candidate === installed,
+			}),
+		).toBe(installed);
 	});
 });
 

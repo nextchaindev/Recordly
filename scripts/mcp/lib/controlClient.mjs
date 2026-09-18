@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -147,6 +148,9 @@ export function getDefaultRecordlyAppPath({
 	env = process.env,
 	execPath = process.execPath,
 	versions = process.versions,
+	platform = process.platform,
+	homeDir = os.homedir(),
+	exists = existsSync,
 } = {}) {
 	if (env.RECORDLY_APP_PATH) {
 		return env.RECORDLY_APP_PATH;
@@ -154,7 +158,33 @@ export function getDefaultRecordlyAppPath({
 	if (versions?.electron && env.ELECTRON_RUN_AS_NODE) {
 		return execPath;
 	}
-	return undefined;
+	// Standard install locations, so the Claude Desktop extension (which runs
+	// on Claude's own Node) can launch Recordly without any configuration.
+	const candidates =
+		platform === "win32"
+			? [
+					path.join(
+						env.LOCALAPPDATA || path.join(homeDir, "AppData", "Local"),
+						"Programs",
+						"Recordly",
+						"Recordly.exe",
+					),
+					path.join(env.ProgramFiles || "C:\\Program Files", "Recordly", "Recordly.exe"),
+				]
+			: platform === "darwin"
+				? [
+						"/Applications/Recordly.app/Contents/MacOS/Recordly",
+						path.join(
+							homeDir,
+							"Applications",
+							"Recordly.app",
+							"Contents",
+							"MacOS",
+							"Recordly",
+						),
+					]
+				: [];
+	return candidates.find((candidate) => exists(candidate));
 }
 
 /**

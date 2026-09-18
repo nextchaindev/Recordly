@@ -35,6 +35,16 @@ the file is removed on quit.
 
 ## 2. Register the MCP server
 
+### Claude Desktop: one-click extension (.mcpb)
+
+`npm run build:mcpb` produces `release/Recordly-MCP.mcpb`, a Claude Desktop extension
+bundle. Double-click it (or Claude Desktop → Settings → Extensions → Advanced settings →
+Install extension…) and Claude runs the server on its own Node runtime: no Node install,
+no JSON editing. The server finds a running Recordly through the discovery file and can
+launch a Recordly installed in the standard location itself; the optional "Recordly
+executable" setting is only for unusual install paths. Extensions apply to Claude Desktop
+chat; Claude Code, Cursor and others use the configs below.
+
 ### Installed app (no Node.js needed)
 
 The Windows/macOS/Linux packages ship the MCP server at

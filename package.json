@@ -43,6 +43,7 @@
 		"checksums:release": "node scripts/write-release-checksums.mjs",
 		"release:create": "node scripts/create-release.mjs",
 		"mcp:serve": "node scripts/mcp/recordly-mcp-server.mjs",
+		"build:mcpb": "node scripts/build-mcpb.mjs",
 		"test": "vitest --run",
 		"test:watch": "vitest"
 	},
