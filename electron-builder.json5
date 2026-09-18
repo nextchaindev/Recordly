@@ -41,6 +41,13 @@
     {
       "from": "public/wallpapers",
       "to": "assets/wallpapers"
+    },
+    {
+      // Recordly MCP server, runnable with the installed Recordly.exe
+      // (ELECTRON_RUN_AS_NODE=1) so agents need no separate Node install.
+      "from": "scripts/mcp",
+      "to": "mcp",
+      "filter": ["**/*.mjs", "!**/*.test.mjs"]
     }
   ],
   "publish": [

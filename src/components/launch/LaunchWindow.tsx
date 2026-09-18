@@ -24,6 +24,7 @@ import { Button } from "../ui/button";
 import { HudInteractionContext } from "./contexts/HudInteractionContext";
 import { canToggleFloatingWebcamPreview } from "./floatingWebcamPreview";
 import { useHudBarDrag } from "./hooks/useHudBarDrag";
+import { useLaunchControlCommands } from "./hooks/useLaunchControlCommands";
 import { useLaunchHudInteractionState } from "./hooks/useLaunchHudInteractionState";
 import { useLaunchWindowActions } from "./hooks/useLaunchWindowActions";
 import { useLaunchWindowSystemState } from "./hooks/useLaunchWindowSystemState";
@@ -95,6 +96,26 @@ function LaunchWindowContent() {
 		syncSelectedSource,
 		refreshProjectLibrary,
 	} = useLaunchWindowActions();
+
+	useLaunchControlCommands({
+		recording,
+		paused,
+		finalizing,
+		countdownActive,
+		toggleRecording,
+		pauseRecording,
+		resumeRecording,
+		cancelRecording,
+		microphoneEnabled,
+		setMicrophoneEnabled,
+		systemAudioEnabled,
+		setSystemAudioEnabled,
+		webcamEnabled,
+		setWebcamEnabled,
+		countdownDelay,
+		setCountdownDelay,
+		handleSourceSelect,
+	});
 
 	const showWebcamControls = webcamEnabled && !recording;
 	const { devices, selectedDeviceId, setSelectedDeviceId } = useMicrophoneDevices(

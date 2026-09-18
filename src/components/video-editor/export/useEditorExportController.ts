@@ -95,5 +95,5 @@ export function useEditorExportController(input: Input) {
 		active: status.isLightningExportInProgress,
 	});
 
-	return { dialogActions, status, exportMessage };
+	return { dialogActions, status, exportMessage, handleExport: runner.handleExport };
 }

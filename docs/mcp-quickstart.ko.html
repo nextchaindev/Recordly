@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recordly MCP 연동 안내</title>
+<style>
+  :root { --text:#1f2328; --muted:#59636e; --line:#d9dee3; --bg:#ffffff; --soft:#f6f8fa; --accent:#0969da; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",-apple-system,"Segoe UI",sans-serif; line-height:1.65; font-size:16px; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 28px; margin: 0 0 6px; }
+  .sub { color: var(--muted); margin-bottom: 28px; }
+  h2 { font-size: 21px; margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  h3 { font-size: 17px; margin: 22px 0 8px; }
+  p { margin: 8px 0; }
+  ol, ul { padding-left: 24px; }
+  li { margin: 6px 0; }
+  code { background: var(--soft); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-family: Consolas, "D2Coding", monospace; font-size: 14px; }
+  pre { background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; overflow-x: auto; font-size: 13.5px; line-height: 1.5; }
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 15px; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--soft); }
+  .note { background: #fff8e6; border: 1px solid #f2d59b; border-radius: 6px; padding: 10px 14px; margin: 14px 0; }
+  .tip { background: #eaf3ff; border: 1px solid #b6d4fe; border-radius: 6px; padding: 10px 14px; margin: 14px 0; }
+  kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 13px; background: var(--soft); }
+</style>
+</head>
+<body>
+<main>
+<h1>Recordly MCP 연동 빠른 시작 (Windows)</h1>
+<p class="sub">AI 에이전트(Claude Code, Cursor 등)가 Recordly로 <strong>특정 앱 창만</strong> 녹화하고 스크린샷을 찍게 하는 설정입니다. Node.js 설치가 필요 없습니다. 설치된 Recordly.exe가 MCP 서버를 직접 실행합니다.</p>
+
+<h2>1. 설치</h2>
+<ol>
+  <li><code>Recordly-windows-x64.exe</code>를 실행합니다.</li>
+  <li>설치 마법사에서 <strong>"현재 사용자만"</strong>을 고릅니다. 그러면 <code>C:\Users\&lt;사용자&gt;\AppData\Local\Programs\Recordly</code>에 설치되고, 같이 받은 설정 파일을 그대로 쓸 수 있습니다.</li>
+</ol>
+<div class="note"><strong>"모든 사용자"</strong>(관리자 권한)로 설치하면 <code>C:\Program Files\Recordly</code>에 들어갑니다. 이 경우 설정 파일의 경로 두 곳을 <code>C:/Program Files/Recordly/Recordly.exe</code> 와 <code>C:/Program Files/Recordly/resources/mcp/recordly-mcp-server.mjs</code> 로 바꿔야 합니다.</div>
+
+<h2>2. MCP 등록 (명령어 없이 파일로)</h2>
+<h3>Claude 앱 (Code 탭)</h3>
+<ol>
+  <li>같이 받은 <code>claude-code.mcp.json</code>을 <strong>작업 폴더</strong>(예: 바탕화면의 <code>AI캡처</code>)에 복사합니다.</li>
+  <li>파일 이름을 <code>.mcp.json</code>으로 바꿉니다. (탐색기에서 이름 바꾸기 → <code>.mcp.json</code> 입력 → Enter. "확장명을 바꾸시겠습니까?" 하면 예.)</li>
+  <li>Claude 앱의 Code 탭에서 그 폴더를 엽니다. "이 프로젝트의 MCP 서버를 사용할까요?" 하고 물어보면 <strong>허용</strong>을 누릅니다.</li>
+</ol>
+<p>이 파일은 <code>%LOCALAPPDATA%</code> 변수를 쓰므로 사용자 이름을 고칠 필요가 없습니다.</p>
+
+<h3>Cursor</h3>
+<ol>
+  <li>Cursor에서 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>J</kbd> → <strong>MCP</strong> → <strong>Add new MCP server</strong>. <code>mcp.json</code> 파일이 열립니다.</li>
+  <li>같이 받은 <code>cursor-mcp.json</code> 내용을 붙여넣고, <code>&lt;사용자이름&gt;</code> 두 곳을 본인 Windows 계정 이름으로 바꿔 저장합니다.</li>
+</ol>
+
+<h3>Claude 데스크톱 채팅 앱</h3>
+<p>설정 → <strong>개발자</strong> → <strong>구성 편집</strong>을 누르면 <code>claude_desktop_config.json</code>이 열립니다. <code>cursor-mcp.json</code> 내용을 붙여넣고 저장한 뒤 앱을 다시 시작합니다.</p>
+
+<h3>터미널이 편하면 (Claude Code)</h3>
+<pre><code>claude mcp add recordly -e ELECTRON_RUN_AS_NODE=1 -- "%LOCALAPPDATA%\Programs\Recordly\Recordly.exe" "%LOCALAPPDATA%\Programs\Recordly\resources\mcp\recordly-mcp-server.mjs"</code></pre>
+
+<h2>3. 처음 한 번: Recordly를 MCP로 켜기</h2>
+<ol>
+  <li>Recordly가 이미 켜져 있으면 작업 표시줄 트레이 아이콘에서 <strong>종료</strong>합니다.</li>
+  <li>에이전트에게 <strong>"recordly_launch 실행해 줘"</strong>라고 말합니다.</li>
+</ol>
+<p>제어 서버가 켜진 상태로 Recordly가 실행되고 설정에 저장됩니다. 이후에는 시작 메뉴로 평소처럼 실행해도 MCP가 붙습니다.</p>
+
+<h2>4. 에이전트에게 시키는 방법</h2>
+<pre><code>Recordly로 Cursor 창만 녹화해 줘. 마이크는 끄고, 카운트다운 없이.
+텍스트는 붙여넣지 말고 직접 타이핑하듯 입력하고, 답을 기다리는 동안 마우스는 화면 구석으로 옮겨 줘.
+녹화가 끝나면 D:\AI캡처\cursor\90_recording_agent_flow.mp4 로 1280x720, 앱 화면만 나오게 내보내 줘.
+그리고 Cursor 창 스크린샷을 D:\AI캡처\cursor\01_editor_home.png 로 찍어 줘.</code></pre>
+
+<h3>에이전트가 내부적으로 쓰는 순서</h3>
+<table>
+  <tr><th>순서</th><th>도구</th><th>하는 일</th></tr>
+  <tr><td>1</td><td><code>recordly_arrange_window name="Cursor"</code></td><td>창을 1280x760(내용 720 + 제목표시줄 40)으로 화면 가운데에 배치</td></tr>
+  <tr><td>2</td><td><code>recordly_start_recording source={"name":"Cursor","type":"window"} microphoneEnabled=false countdownSeconds=0</code></td><td>그 창만 녹화 시작 (바탕화면·작업표시줄 제외)</td></tr>
+  <tr><td>3</td><td>(컴퓨터 유즈 / 브라우저 도구)</td><td>대상 앱 조작. 텍스트는 한 글자씩 타이핑, 대기 중엔 마우스를 빈 곳으로</td></tr>
+  <tr><td>4</td><td><code>recordly_stop_recording</code></td><td>녹화 정지 (편집기가 열림)</td></tr>
+  <tr><td>5</td><td><code>recordly_export_recording outputPath="D:\AI캡처\cursor\90_recording_agent_flow.mp4"</code></td><td>Recordly 내보내기: 제목표시줄 제거, 여백 0, 검은 배경, 16:9, 마우스 커서 포함 → 정확히 1280x720</td></tr>
+  <tr><td>6</td><td><code>recordly_capture_screenshot name="Cursor" outputPath="D:\AI캡처\cursor\01_editor_home.png"</code></td><td>창 단독 스크린샷</td></tr>
+</table>
+
+<div class="tip">
+<strong>왜 창을 먼저 가운데로 옮기나요?</strong> 창 녹화는 모니터 화면을 창 영역만큼 잘라 찍기 때문에, 화면 가장자리에 그려지는 "클로드가 컴퓨터를 사용 중" 테두리가 창 위에 겹치면 그대로 찍힙니다. 가운데 1280x760이면 그 테두리 밖이라 들어가지 않습니다.<br>
+<strong>왜 원본 mp4가 아니라 내보내기를 쓰나요?</strong> 원본 캡처에는 마우스 커서가 없고(좌표만 따로 기록), Recordly 내보내기가 커서를 부드럽게 다시 그립니다.
+</div>
+
+<div class="note">같은 제목의 창이 여러 개인 앱(예: ChatGPT 데스크톱 앱은 마스코트 오버레이 창 제목도 "ChatGPT")은 실제 앱 창을 자동으로 고르지만, 확실히 하려면 <code>recordly_list_sources</code>에서 본 <strong>id</strong>로 지정하라고 하면 됩니다.</div>
+
+<h2>5. 자주 겪는 문제</h2>
+<table>
+  <tr><th>증상</th><th>해결</th></tr>
+  <tr><td><code>Recordly control server not found</code></td><td>Recordly를 트레이에서 종료한 뒤 <code>recordly_launch</code>를 다시 실행</td></tr>
+  <tr><td>창 스크린샷이 실패</td><td>대상 창이 최소화되어 있으면 안 잡힙니다. 창을 복원한 뒤 다시 시도</td></tr>
+  <tr><td>녹화 정지 후 편집기가 뜸</td><td>정상입니다. 내보내기(<code>recordly_export_recording</code>)를 하거나, 다음 녹화 때 에이전트가 자동으로 HUD로 돌아갑니다</td></tr>
+  <tr><td>도구 목록에 <code>recordly_*</code>가 안 보임</td><td>MCP는 세션이 시작될 때 붙습니다. 새 세션(새 채팅)을 열어 보세요</td></tr>
+  <tr><td>원본 mp4가 어디 있나</td><td><code>%APPDATA%\Recordly\recordings\</code></td></tr>
+</table>
+
+<p class="sub" style="margin-top:32px">보안: 제어 서버는 이 PC 안(127.0.0.1)에서만, 실행마다 새로 만드는 토큰으로만 접근됩니다.</p>
+</main>
+</body>
+</html>

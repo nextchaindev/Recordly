@@ -930,6 +930,9 @@ interface Window {
 		cancelCountdown: () => Promise<{ success: boolean }>;
 		getActiveCountdown: () => Promise<{ success: boolean; seconds: number | null }>;
 		onCountdownTick: (callback: (seconds: number) => void) => () => void;
+		onControlCommand: (
+			handler: (name: string, args: Record<string, unknown>) => Promise<unknown> | unknown,
+		) => () => void;
 	};
 }
 

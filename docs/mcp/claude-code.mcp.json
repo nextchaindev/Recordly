@@ -1,0 +1,9 @@
+{
+	"mcpServers": {
+		"recordly": {
+			"command": "${LOCALAPPDATA}\\Programs\\Recordly\\Recordly.exe",
+			"args": ["${LOCALAPPDATA}\\Programs\\Recordly\\resources\\mcp\\recordly-mcp-server.mjs"],
+			"env": { "ELECTRON_RUN_AS_NODE": "1" }
+		}
+	}
+}

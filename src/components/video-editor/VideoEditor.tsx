@@ -8,6 +8,7 @@ import { useEditorExportController } from "./export/useEditorExportController";
 import { useExportDimensions } from "./export/useExportDimensions";
 import { useExportSession } from "./export/useExportSession";
 import { useExportSettings } from "./export/useExportSettings";
+import { useEditorControlCommands } from "./hooks/useEditorControlCommands";
 import { useTimelineEditingController } from "./hooks/useTimelineEditingController";
 import { EditorShell } from "./layout/EditorShell";
 import { useEditorSettingsPanelProps } from "./layout/useEditorSettingsPanelProps";
@@ -327,6 +328,20 @@ export default function VideoEditor() {
 		experimentalNvidiaCudaExport,
 		nvidiaCudaExportAvailable,
 		remountPreview,
+	});
+	useEditorControlCommands({
+		videoPath,
+		loading,
+		error,
+		isPreviewReady,
+		duration,
+		aspectRatio,
+		setAspectRatio: setAspectRatio as (value: never) => void,
+		appearance,
+		exportSettings,
+		setSessionShowCursorOverride,
+		videoPlaybackRef,
+		handleExport: exportController.handleExport,
 	});
 	const previewAspectRatioValue = getAspectRatioValue(
 		aspectRatio,

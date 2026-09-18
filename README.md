@@ -71,6 +71,15 @@ Browse and install community extensions from the [Recordly Marketplace](https://
 
 ---
 
+## AI agent control (MCP)
+
+Recordly ships an optional loopback control server and a dependency-free MCP server so AI
+agents (Claude Code, Cursor, Codex, …) can pick a window, start/stop recordings, take clean
+window screenshots and operate Recordly's own UI directly, instead of relying on screen
+capture that cannot see the HUD. Start Recordly with `--control-server` (or
+`RECORDLY_CONTROL_SERVER=1`) and register `scripts/mcp/recordly-mcp-server.mjs` with your
+agent. See [docs/mcp-control.md](docs/mcp-control.md).
+
 ## All Features
 
 ### Recording

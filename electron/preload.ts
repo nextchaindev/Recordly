@@ -1019,4 +1019,318 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		ipcRenderer.on("countdown-tick", listener);
 		return () => ipcRenderer.removeListener("countdown-tick", listener);
 	},
+	/**
+	 * Registers a handler for commands sent by the local control server
+	 * (see electron/control/server.ts). Returns an unsubscribe function.
+	 * A handler must return a JSON-serializable value or throw.
+	 */
+	onControlCommand: (
+		handler: (name: string, args: Record<string, unknown>) => Promise<unknown> | unknown,
+	) => {
+		controlCommandHandlers.add(handler);
+		return () => {
+			controlCommandHandlers.delete(handler);
+		};
+	},
 });
+
+// ── Control server bridge ─────────────────────────────────────────────────────
+// The control server (opt-in, loopback only) drives the app for automation and
+// the Recordly MCP server. Generic "ui.*" commands are answered here because
+// the preload script can see the DOM; everything else is forwarded to
+// handlers registered by the renderer via onControlCommand.
+
+type ControlCommandHandler = (
+	name: string,
+	args: Record<string, unknown>,
+) => Promise<unknown> | unknown;
+
+const controlCommandHandlers = new Set<ControlCommandHandler>();
+const CONTROL_UNHANDLED = Symbol("control-unhandled");
+const uiRefs = new Map<string, Element>();
+
+const UI_SNAPSHOT_SELECTOR = [
+	"button",
+	"a[href]",
+	"input",
+	"select",
+	"textarea",
+	"[role='button']",
+	"[role='menuitem']",
+	"[role='menuitemradio']",
+	"[role='menuitemcheckbox']",
+	"[role='option']",
+	"[role='tab']",
+	"[role='switch']",
+	"[role='checkbox']",
+	"[role='radio']",
+	"[role='slider']",
+	"[role='combobox']",
+	"[role='dialog']",
+	"[contenteditable='true']",
+	"[data-testid]",
+].join(",");
+
+function isElementVisible(element: Element): boolean {
+	if (!(element instanceof HTMLElement)) {
+		return true;
+	}
+	const style = window.getComputedStyle(element);
+	if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") {
+		return false;
+	}
+	const rect = element.getBoundingClientRect();
+	return rect.width > 0 && rect.height > 0;
+}
+
+function describeElementName(element: Element): string {
+	const aria = element.getAttribute("aria-label");
+	if (aria?.trim()) return aria.trim();
+	const labelledBy = element.getAttribute("aria-labelledby");
+	if (labelledBy) {
+		const text = labelledBy
+			.split(/\s+/)
+			.map((id) => document.getElementById(id)?.textContent?.trim() ?? "")
+			.filter(Boolean)
+			.join(" ");
+		if (text) return text;
+	}
+	const title = element.getAttribute("title");
+	if (title?.trim()) return title.trim();
+	if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+		if (element.placeholder?.trim()) return element.placeholder.trim();
+		if (element.id) {
+			const label = document.querySelector(`label[for="${CSS.escape(element.id)}"]`);
+			if (label?.textContent?.trim()) return label.textContent.trim();
+		}
+	}
+	const text = (element.textContent ?? "").replace(/\s+/g, " ").trim();
+	return text.slice(0, 120);
+}
+
+function describeElementRole(element: Element): string {
+	const role = element.getAttribute("role");
+	if (role) return role;
+	const tag = element.tagName.toLowerCase();
+	if (tag === "input") {
+		return `input:${(element as HTMLInputElement).type || "text"}`;
+	}
+	if (tag === "a") return "link";
+	return tag;
+}
+
+function elementBounds(element: Element) {
+	const rect = element.getBoundingClientRect();
+	return {
+		x: Math.round(rect.left),
+		y: Math.round(rect.top),
+		width: Math.round(rect.width),
+		height: Math.round(rect.height),
+	};
+}
+
+function snapshotUi(args: Record<string, unknown>) {
+	uiRefs.clear();
+	const includeHidden = args.includeHidden === true;
+	const limit =
+		typeof args.limit === "number" && Number.isFinite(args.limit)
+			? Math.max(1, Math.min(500, Math.floor(args.limit)))
+			: 200;
+	const elements = Array.from(document.querySelectorAll(UI_SNAPSHOT_SELECTOR));
+	const items: Array<Record<string, unknown>> = [];
+	for (const element of elements) {
+		if (!includeHidden && !isElementVisible(element)) {
+			continue;
+		}
+		const ref = `ref_${items.length + 1}`;
+		uiRefs.set(ref, element);
+		const item: Record<string, unknown> = {
+			ref,
+			role: describeElementRole(element),
+			name: describeElementName(element),
+			bounds: elementBounds(element),
+		};
+		if (element instanceof HTMLButtonElement || element instanceof HTMLInputElement) {
+			if (element.disabled) item.disabled = true;
+		}
+		if (element instanceof HTMLInputElement) {
+			if (element.type === "checkbox" || element.type === "radio") {
+				item.checked = element.checked;
+			} else if (element.type !== "password") {
+				item.value = element.value;
+			}
+		} else if (element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
+			item.value = element.value;
+		}
+		const ariaChecked = element.getAttribute("aria-checked");
+		if (ariaChecked !== null) item.checked = ariaChecked === "true";
+		const ariaExpanded = element.getAttribute("aria-expanded");
+		if (ariaExpanded !== null) item.expanded = ariaExpanded === "true";
+		const ariaSelected = element.getAttribute("aria-selected");
+		if (ariaSelected !== null) item.selected = ariaSelected === "true";
+		const dataState = element.getAttribute("data-state");
+		if (dataState) item.state = dataState;
+		const testId = element.getAttribute("data-testid");
+		if (testId) item.testId = testId;
+		items.push(item);
+		if (items.length >= limit) break;
+	}
+	const bodyText = (document.body?.innerText ?? "").replace(/\s+\n/g, "\n").trim();
+	return {
+		url: window.location.href,
+		title: document.title,
+		viewport: { width: window.innerWidth, height: window.innerHeight },
+		elements: items,
+		text: bodyText.slice(0, 4000),
+	};
+}
+
+function resolveUiElement(args: Record<string, unknown>): Element {
+	const ref = typeof args.ref === "string" ? args.ref : null;
+	if (ref) {
+		const element = uiRefs.get(ref);
+		if (!element || !element.isConnected) {
+			throw new Error(`Unknown or stale ref "${ref}". Take a new ui.snapshot first.`);
+		}
+		return element;
+	}
+	const selector = typeof args.selector === "string" ? args.selector : null;
+	if (selector) {
+		const element = document.querySelector(selector);
+		if (!element) {
+			throw new Error(`No element matches selector "${selector}".`);
+		}
+		return element;
+	}
+	const text = typeof args.text === "string" ? args.text.trim().toLowerCase() : "";
+	if (text) {
+		const candidates = Array.from(document.querySelectorAll(UI_SNAPSHOT_SELECTOR)).filter(
+			(element) => isElementVisible(element),
+		);
+		const exact = candidates.find(
+			(element) => describeElementName(element).toLowerCase() === text,
+		);
+		const partial = candidates.find((element) =>
+			describeElementName(element).toLowerCase().includes(text),
+		);
+		const element = exact ?? partial;
+		if (!element) {
+			throw new Error(`No visible element with text "${args.text}".`);
+		}
+		return element;
+	}
+	throw new Error('Provide "ref", "selector" or "text".');
+}
+
+function setUiValue(args: Record<string, unknown>) {
+	const element = resolveUiElement(args);
+	const value = args.value;
+	if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+		if (
+			element instanceof HTMLInputElement &&
+			(element.type === "checkbox" || element.type === "radio")
+		) {
+			const next = Boolean(value);
+			if (element.checked !== next) {
+				element.click();
+			}
+			return { checked: element.checked };
+		}
+		const prototype =
+			element instanceof HTMLInputElement
+				? HTMLInputElement.prototype
+				: HTMLTextAreaElement.prototype;
+		const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+		element.focus();
+		if (setter) {
+			setter.call(element, String(value ?? ""));
+		} else {
+			element.value = String(value ?? "");
+		}
+		element.dispatchEvent(new Event("input", { bubbles: true }));
+		element.dispatchEvent(new Event("change", { bubbles: true }));
+		return { value: element.value };
+	}
+	if (element instanceof HTMLSelectElement) {
+		element.value = String(value ?? "");
+		element.dispatchEvent(new Event("change", { bubbles: true }));
+		return { value: element.value };
+	}
+	if (element instanceof HTMLElement && element.isContentEditable) {
+		element.focus();
+		element.textContent = String(value ?? "");
+		element.dispatchEvent(new InputEvent("input", { bubbles: true }));
+		return { value: element.textContent };
+	}
+	throw new Error("Element does not accept a value.");
+}
+
+async function handlePreloadUiCommand(
+	name: string,
+	args: Record<string, unknown>,
+): Promise<unknown | typeof CONTROL_UNHANDLED> {
+	switch (name) {
+		case "ui.snapshot":
+			return snapshotUi(args);
+		case "ui.locate": {
+			const element = resolveUiElement(args);
+			if (element instanceof HTMLElement) {
+				element.scrollIntoView({ block: "nearest", inline: "nearest" });
+			}
+			return elementBounds(element);
+		}
+		case "ui.setValue":
+			return setUiValue(args);
+		case "ui.focus": {
+			const element = resolveUiElement(args);
+			if (element instanceof HTMLElement) {
+				element.focus();
+			}
+			return { ok: true };
+		}
+		case "ui.text":
+			return { text: (document.body?.innerText ?? "").trim().slice(0, 20000) };
+		default:
+			return CONTROL_UNHANDLED;
+	}
+}
+
+ipcRenderer.on(
+	"control-command",
+	async (_event, payload: { id: string; name: string; args?: Record<string, unknown> }) => {
+		const { id, name } = payload;
+		const args = payload.args ?? {};
+		try {
+			const preloadResult = await handlePreloadUiCommand(name, args);
+			if (preloadResult !== CONTROL_UNHANDLED) {
+				ipcRenderer.send("control-command-result", { id, ok: true, result: preloadResult });
+				return;
+			}
+			for (const handler of controlCommandHandlers) {
+				const result = await handler(name, args);
+				if (result !== CONTROL_COMMAND_UNHANDLED_RESULT) {
+					ipcRenderer.send("control-command-result", {
+						id,
+						ok: true,
+						result: result ?? null,
+					});
+					return;
+				}
+			}
+			ipcRenderer.send("control-command-result", {
+				id,
+				ok: false,
+				error: `No handler in this window for control command "${name}".`,
+			});
+		} catch (error) {
+			ipcRenderer.send("control-command-result", {
+				id,
+				ok: false,
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	},
+);
+
+/** Sentinel a renderer handler returns to say "not mine, try the next handler". */
+const CONTROL_COMMAND_UNHANDLED_RESULT = "__recordly_control_unhandled__";

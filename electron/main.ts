@@ -16,6 +16,13 @@ import {
 	Tray,
 } from "electron";
 import { RECORDINGS_DIR } from "./appPaths";
+import { readAppSetting } from "./appSettingsStore";
+import { isControlServerEnabled } from "./control/protocol";
+import {
+	noteRecordingStateForControl,
+	startControlServer,
+	stopControlServer,
+} from "./control/server";
 import { showCursor } from "./cursorHider";
 import { getGpuSwitches } from "./gpuSwitches";
 import {
@@ -865,6 +872,7 @@ function createSourceSelectorWindowWrapper() {
 // explicitly with Cmd + Q.
 app.on("before-quit", () => {
 	isAppQuitting = true;
+	void stopControlServer();
 	killWindowsCaptureProcess();
 	showCursor();
 	cleanupNativeVideoExportSessions();
@@ -1002,6 +1010,7 @@ app.whenReady().then(async () => {
 		() => sourceSelectorWindow,
 		(recording: boolean, sourceName: string) => {
 			selectedSourceName = sourceName;
+			noteRecordingStateForControl(recording);
 			setHudOverlayRecordingActive(recording);
 			if (shouldUseTray()) {
 				if (!tray) createTray();
@@ -1015,6 +1024,56 @@ app.whenReady().then(async () => {
 			}
 		},
 	);
+
+	if (
+		!IS_SMOKE_EXPORT &&
+		isControlServerEnabled({
+			env: process.env,
+			argv: process.argv,
+			appSetting: readAppSetting("controlServerEnabled"),
+		})
+	) {
+		startControlServer({
+			getHudWindow: () => getHudOverlayWindow(),
+			showHud: () => {
+				const hud = getHudOverlayWindow();
+				if (hud && !hud.isDestroyed()) {
+					restoreWindowSafely(hud);
+					return;
+				}
+				// The HUD is torn down while the editor is open. Returning to the
+				// HUD mirrors what closing the editor does for a user.
+				const editorWindow = getExistingEditorWindow();
+				if (editorWindow) {
+					if (process.platform === "win32") {
+						closeEditorWindowToHud(editorWindow);
+					} else {
+						editorWindow.once("closed", () => createWindow());
+						closeEditorWindowBypassingUnsavedPrompt(editorWindow);
+					}
+					return;
+				}
+				mainWindow = null;
+				createWindow();
+			},
+			openEditor: () => {
+				createEditorWindowWrapper();
+			},
+			closeEditor: () => {
+				const editorWindow = getExistingEditorWindow();
+				if (!editorWindow) {
+					return;
+				}
+				if (process.platform === "win32") {
+					closeEditorWindowToHud(editorWindow);
+				} else {
+					closeEditorWindowBypassingUnsavedPrompt(editorWindow);
+				}
+			},
+		}).catch((error) => {
+			console.warn("[control-server] Failed to start:", error);
+		});
+	}
 
 	if (IS_SMOKE_EXPORT || process.env.RECORDLY_DEV_OPEN_RECORDING_INPUT) {
 		await logSmokeExportGpuDiagnostics();

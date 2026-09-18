@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import { toast } from "sonner";
+import { resolveFixedExportOutputPath } from "@/lib/exportAutomation";
 import { getMp4ExportBitrate } from "@/lib/exporter/exportBitrate";
 import { DEFAULT_MP4_CODEC } from "@/lib/exporter/mp4Support";
 import type { ExportSettings } from "@/lib/exporter/types";
@@ -168,7 +169,7 @@ export function useExportRunner(input: ExportRunnerInput) {
 						const { saveResult, pendingSave } = await saveExportBlob(
 							result.blob,
 							fileName,
-							smokeExportConfig.enabled ? smokeExportConfig.outputPath : null,
+							resolveFixedExportOutputPath(smokeExportConfig),
 						);
 						if (exportWasCancelled()) {
 							await discardCancelledTemp(pendingSave);
@@ -348,10 +349,7 @@ export function useExportRunner(input: ExportRunnerInput) {
 							saveResult = await window.electronAPI.finalizeExportedVideo({
 								tempPath: result.tempFilePath,
 								fileName,
-								outputPath:
-									smokeExportConfig.enabled && smokeExportConfig.outputPath
-										? smokeExportConfig.outputPath
-										: null,
+								outputPath: resolveFixedExportOutputPath(smokeExportConfig),
 								captionSidecar: sidecarForThisExport,
 							});
 							if (exportWasCancelled()) {
@@ -374,7 +372,7 @@ export function useExportRunner(input: ExportRunnerInput) {
 							const blobSave = await saveExportBlob(
 								result.blob,
 								fileName,
-								smokeExportConfig.enabled ? smokeExportConfig.outputPath : null,
+								resolveFixedExportOutputPath(smokeExportConfig),
 								sidecarForThisExport,
 							);
 							if (exportWasCancelled()) {
