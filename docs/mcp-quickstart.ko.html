@@ -62,7 +62,7 @@
 
 <h2>3. 처음 한 번: Recordly를 MCP로 켜기</h2>
 <ol>
-  <li>Recordly가 이미 켜져 있으면 작업 표시줄 트레이 아이콘에서 <strong>종료</strong>합니다.</li>
+  <li>Recordly가 이미 켜져 있으면 <strong>종료</strong>합니다. Windows에서는 트레이 아이콘이 없습니다. 화면에 떠 있는 Recordly 바(HUD) 오른쪽 끝의 <strong>X</strong>를 누르거나, 작업 표시줄의 Recordly 아이콘을 우클릭 → <strong>창 닫기</strong>를 누르면 됩니다.</li>
   <li>에이전트에게 <strong>"recordly_launch 실행해 줘"</strong>라고 말합니다.</li>
 </ol>
 <p>제어 서버가 켜진 상태로 Recordly가 실행되고 설정에 저장됩니다. 이후에는 시작 메뉴로 평소처럼 실행해도 MCP가 붙습니다.</p>
@@ -94,7 +94,7 @@
 <h2>5. 자주 겪는 문제</h2>
 <table>
   <tr><th>증상</th><th>해결</th></tr>
-  <tr><td><code>Recordly control server not found</code></td><td>Recordly를 트레이에서 종료한 뒤 <code>recordly_launch</code>를 다시 실행</td></tr>
+  <tr><td><code>Recordly control server not found</code></td><td>Recordly를 종료(HUD 바의 X 또는 작업 표시줄 우클릭 → 창 닫기)한 뒤 <code>recordly_launch</code>를 다시 실행</td></tr>
   <tr><td>창 스크린샷이 실패</td><td>대상 창이 최소화되어 있으면 안 잡힙니다. 창을 복원한 뒤 다시 시도</td></tr>
   <tr><td>녹화 정지 후 편집기가 뜸</td><td>정상입니다. 내보내기(<code>recordly_export_recording</code>)를 하거나, 다음 녹화 때 에이전트가 자동으로 HUD로 돌아갑니다</td></tr>
   <tr><td>도구 목록에 <code>recordly_*</code>가 안 보임</td><td>MCP는 세션이 시작될 때 붙습니다. 새 세션(새 채팅)을 열어 보세요</td></tr>

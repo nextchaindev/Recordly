@@ -38,7 +38,8 @@ export const TOOL_DEFINITIONS = [
 			"Launch Recordly with the control server enabled if it is not already reachable, and remember " +
 			"that setting so later normal launches keep it on. Uses the installed Recordly.exe when this MCP " +
 			"server runs through it, otherwise RECORDLY_APP_PATH. If Recordly is already open without the " +
-			"control server, ask the user to quit it first (tray icon → Quit).",
+			"control server, ask the user to quit it first (close the HUD bar with its X button; there is " +
+			"no tray icon on Windows/macOS).",
 		inputSchema: {
 			type: "object",
 			properties: {

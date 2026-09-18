@@ -62,9 +62,9 @@ or as JSON (Claude Code `.mcp.json`, Cursor, Windsurf, Codex all use this shape)
 
 Then, with Recordly **closed**, ask the agent to call `recordly_launch` once. It starts
 Recordly with the control server on and writes `controlServerEnabled: true` to
-`app-settings.json`, so from then on starting Recordly normally (Start menu, tray) keeps
-the server on. If Recordly is already running without the server, quit it from the tray
-icon first.
+`app-settings.json`, so from then on starting Recordly normally (Start menu, taskbar) keeps
+the server on. If Recordly is already running without the server, quit it first: close the HUD
+bar with its X button (Windows and macOS have no tray icon; only Linux does).
 
 ### From the repository (Node 18+)
 

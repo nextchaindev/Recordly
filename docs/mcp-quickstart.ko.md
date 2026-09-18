@@ -53,7 +53,7 @@ MCP 설정 파일(예: Cursor의 `mcp.json`)에 추가합니다. `<사용자>`�
 
 ## 3. 처음 한 번: Recordly를 MCP로 켜기
 
-1. Recordly가 이미 켜져 있으면 트레이 아이콘에서 **종료**합니다.
+1. Recordly가 이미 켜져 있으면 **종료**합니다. Windows에는 트레이 아이콘이 없습니다. HUD 바 오른쪽 끝의 **X**를 누르거나 작업 표시줄 아이콘 우클릭 → 창 닫기를 누릅니다.
 2. 에이전트에게 "recordly_launch 실행해 줘"라고 합니다.
 
 이때 제어 서버가 켜진 상태로 Recordly가 실행되고, 설정에 저장되어 이후에는 시작 메뉴로
@@ -104,7 +104,7 @@ recordly_stop_recording saveAs="D:\AI캡처\cursor\90_recording_agent_flow.mp4" 
 
 | 증상 | 해결 |
 | --- | --- |
-| `Recordly control server not found` | Recordly를 트레이에서 종료한 뒤 `recordly_launch`를 다시 실행 |
+| `Recordly control server not found` | Recordly를 종료(HUD 바의 X 또는 작업 표시줄 우클릭 → 창 닫기)한 뒤 `recordly_launch`를 다시 실행 |
 | 창 스크린샷이 실패 | 대상 창이 최소화되어 있으면 안 잡힙니다. 창을 복원한 뒤 다시 시도 |
 | 녹화 정지 후 편집기가 뜸 | 정상 동작입니다. 다음 녹화는 에이전트가 자동으로 HUD로 돌아가서 시작합니다 |
 | 원본 mp4가 어디 있나 | `%APPDATA%\Recordly\recordings\` (saveAs로 복사본을 원하는 위치에 저장) |
